@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+__pycache__/
+*.pyc
+.cursor/
+*.log
+
+# Large source / dev videos (keep only intro-custom-web.mp4 for the site)
+assets/video/intro-custom.mp4
+assets/video/intro-greenscreen.mp4
+assets/video/template-source.mp4
+assets/video/frame_*.jpg
+assets/video/check_*.jpg
+assets/video/ref_*.jpg
+assets/video/t_*.jpg
