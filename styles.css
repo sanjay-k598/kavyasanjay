@@ -492,8 +492,11 @@ a {
 }
 
 .couple-photo-frame .invite-frame img {
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
+  object-position: center center;
+  transform: none;
+  animation: none;
 }
 
 .couple-photo-caption {
@@ -1281,7 +1284,6 @@ dialog::backdrop {
   }
 
   .couple-photo-frame .invite-frame img {
-    aspect-ratio: 16 / 10;
     max-height: 480px;
   }
 
