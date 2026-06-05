@@ -525,7 +525,7 @@ function injectSchema() {
 function applySeoMeta() {
   const dict = getDict();
   document.title = `${config.brideName} & ${config.groomName} | ${dict.navInvite}`;
-  const desc = `You're invited to celebrate ${config.brideName} & ${config.groomName}'s wedding.`;
+  const desc = `You are invited to celebrate ${config.brideName} and ${config.groomName}'s wedding.`;
   const ogImage = absoluteAssetUrl(config.ogShareImage || config.invitationImage);
   const siteUrl = config.siteUrl || window.location.origin;
   const set = (sel, val) => document.querySelector(sel)?.setAttribute("content", val);
