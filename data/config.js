@@ -4,6 +4,8 @@ window.WEDDING_CONFIG = {
   groomName: "Sanjay",
   weddingDateDisplay: "Thursday 2 July, 2026",
   invitationImage: "assets/wedding/invitation.jpeg",
+  /** Landscape image for WhatsApp / iMessage link previews (1200×630) */
+  ogShareImage: "assets/wedding/og-share.jpg",
   couplePhoto: "assets/wedding/photo1.jpg",
   invitationCard: "assets/wedding/invitation.jpeg",
   weddingDate: "2026-07-02",
