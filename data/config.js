@@ -1,4 +1,5 @@
 window.WEDDING_CONFIG = {
+  siteUrl: "https://kavyasanjay.com",
   brideName: "Kavya",
   groomName: "Sanjay",
   weddingDateDisplay: "Thursday 2 July, 2026",
@@ -17,7 +18,9 @@ window.WEDDING_CONFIG = {
     "https://docs.google.com/forms/d/e/1FAIpQLScS6FR1id3ilLCJCSIA1_5G8HbE-pm_nY7JSj67JPQ9idWajA/viewform?embedded=true",
   googleFormViewUrl: "https://forms.gle/ABXme3F6Bnvsk6Cu7",
   languageOptions: ["en", "te", "kn"],
-  whatsappNumber: "919999999999",
+  whatsappNumber: "13134235855",
+  /** Add YouTube / Zoom link on wedding day; leave empty to show “coming soon” */
+  livestreamUrl: "",
   emergencyNumber: "+91 90000 90000",
   /** YouTube background music: https://www.youtube.com/watch?v=lBVRsXXDJA0 */
   youtubeMusicId: "lBVRsXXDJA0",
@@ -57,12 +60,13 @@ window.WEDDING_CONFIG = {
     },
     {
       id: "haldi",
-      datetime: "2026-07-01T10:00:00-04:00",
+      datetime: "2026-07-01T16:00:00-04:00",
       atResidence: true
     },
     {
       id: "wedding",
-      datetime: "2026-07-02T09:00:00-04:00"
+      datetime: "2026-07-02T09:00:00-04:00",
+      endDatetime: "2026-07-02T14:00:00-04:00"
     },
     {
       id: "satyanarayana",
@@ -121,6 +125,17 @@ window.WEDDING_CONFIG = {
       contactKicker: "Help",
       contactHelp: "Contact",
       addToCalendar: "Add to Calendar",
+      addAllToCalendar: "Add all events to calendar",
+      rsvpDeadlineNote: "Please RSVP by June 20, 2026",
+      callNow: "Call",
+      tapToCall: "Tap to call on mobile",
+      livestreamKicker: "Wedding Day",
+      livestreamTitle: "Livestream",
+      livestreamNote: "A live video link will be shared here on the wedding day.",
+      watchLive: "Watch live",
+      venueArriveBy: "Please arrive by 9:30 AM.",
+      venueEntrance: "Use the main entrance.",
+      venueAskFor: "Ask for the Old Prayer Hall.",
       countdownDays: "Days",
       countdownHours: "Hours",
       countdownMins: "Mins",
@@ -143,6 +158,7 @@ window.WEDDING_CONFIG = {
       event_wedding: "Wedding Day",
       event_satyanarayana: "Satyanarayana Vratham",
       event_wedding_muhurtham: "Muhurtham 10 AM EST",
+      event_wedding_lunch: "Lunch: 12:30 PM",
       event_wedding_location:
         "Bharatiya Temple, Old Prayer Hall, Troy (9:00 AM – 2:00 PM)"
     },
@@ -182,6 +198,17 @@ window.WEDDING_CONFIG = {
       contactKicker: "సహాయం",
       contactHelp: "సంప్రదింపు",
       addToCalendar: "క్యాలెండర్‌కు జోడించండి",
+      addAllToCalendar: "అన్ని కార్యక్రమాలను క్యాలెండర్‌కు జోడించండి",
+      rsvpDeadlineNote: "దయచేసి జూన్ 20, 2026 నాటికి లోగా RSVP చేయండి",
+      callNow: "కాల్ చేయండి",
+      tapToCall: "మొబైల్‌లో కాల్ చేయడానికి నొక్కండి",
+      livestreamKicker: "వివాహ దినం",
+      livestreamTitle: "లైవ్ ప్రసారం",
+      livestreamNote: "వివాహ దినాన లైవ్ వీడియో లింక్ ఇక్కడ షేర్ చేస్తాము.",
+      watchLive: "లైవ్ చూడండి",
+      venueArriveBy: "దయచేసి ఉదయం 9:30 గంటలకు చేరండి.",
+      venueEntrance: "ప్రధాన ప్రవేశద్వారం ఉపయోగించండి.",
+      venueAskFor: "పాత ప్రార్థనా హాల్ కోసం అడగండి.",
       countdownDays: "రోజులు",
       countdownHours: "గంటలు",
       countdownMins: "నిమిషాలు",
@@ -204,6 +231,7 @@ window.WEDDING_CONFIG = {
       event_wedding: "వివాహ దినం",
       event_satyanarayana: "సత్యనారాయణ వ్రతం",
       event_wedding_muhurtham: "ముహూర్తం ఉదయం 10 గంటలకు (EST)",
+      event_wedding_lunch: "భోజనం: మధ్యాహ్నం 12:30",
       event_wedding_location:
         "భారతీయ ఆలయం, పాత ప్రార్థనా హాల్, ట్రాయ్ (ఉదయం 9:00 – మధ్యాహ్నం 2:00)"
     },
@@ -243,6 +271,17 @@ window.WEDDING_CONFIG = {
       contactKicker: "ಸಹಾಯ",
       contactHelp: "ಸಂಪರ್ಕ",
       addToCalendar: "ಕ್ಯಾಲೆಂಡರ್‌ಗೆ ಸೇರಿಸಿ",
+      addAllToCalendar: "ಎಲ್ಲಾ ಕಾರ್ಯಕ್ರಮಗಳನ್ನು ಕ್ಯಾಲೆಂಡರ್‌ಗೆ ಸೇರಿಸಿ",
+      rsvpDeadlineNote: "ದಯವಿಟ್ಟು ಜೂನ್ 20, 2026 ರೊಳಗೆ ಹಾಜರಾತಿ ದೃಢೀಕರಿಸಿ",
+      callNow: "ಕರೆ ಮಾಡಿ",
+      tapToCall: "ಮೊಬೈಲ್‌ನಲ್ಲಿ ಕರೆ ಮಾಡಲು ಟ್ಯಾಪ್ ಮಾಡಿ",
+      livestreamKicker: "ಮದುವೆ ದಿನ",
+      livestreamTitle: "ಲೈವ್ ಸ್ಟ್ರೀಮ್",
+      livestreamNote: "ಮದುವೆ ದಿನಾಂಕದಂದು ಲೈವ್ ವೀಡಿಯೊ ಲಿಂಕ್ ಇಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಲಾಗುತ್ತದೆ.",
+      watchLive: "ಲೈವ್ ನೋಡಿ",
+      venueArriveBy: "ದಯವಿಟ್ಟು ಬೆಳಿಗ್ಗೆ 9:30 ಗಂಟೆಗೆ ಬನ್ನಿ.",
+      venueEntrance: "ಮುಖ್ಯ ಪ್ರವೇಶದ್ವಾರ ಬಳಸಿ.",
+      venueAskFor: "ಹಳೆಯ ಪ್ರಾರ್ಥನಾ ಹಾಲ್ ಕೇಳಿ.",
       countdownDays: "ದಿನಗಳು",
       countdownHours: "ಗಂಟೆಗಳು",
       countdownMins: "ನಿಮಿಷಗಳು",
@@ -265,6 +304,7 @@ window.WEDDING_CONFIG = {
       event_wedding: "ಮದುವೆ ದಿನ",
       event_satyanarayana: "ಸತ್ಯನಾರಾಯಣ ವ್ರತ",
       event_wedding_muhurtham: "ಮುಹೂರ್ತ ಬೆಳಿಗ್ಗೆ 10 ಗಂಟೆ (EST)",
+      event_wedding_lunch: "ಊಟ: ಮಧ್ಯಾಹ್ನ 12:30",
       event_wedding_location:
         "ಭಾರತೀಯ ದೇವಾಲಯ, ಹಳೆಯ ಪ್ರಾರ್ಥನಾ ಹಾಲ್, ಟ್ರಾಯ್ (ಬೆಳಿಗ್ಗೆ 9:00 – ಮಧ್ಯಾಹ್ನ 2:00)"
     }

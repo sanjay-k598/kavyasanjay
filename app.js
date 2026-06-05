@@ -28,6 +28,10 @@ function eventMuhurtham(event, dict = getDict()) {
   return dict[eventDictKey(event, "muhurtham")] || event.muhurtham || "";
 }
 
+function eventLunch(event, dict = getDict()) {
+  return dict[eventDictKey(event, "lunch")] || event.lunch || "";
+}
+
 function fmtEventDate(iso, lang = currentLang) {
   const d = new Date(iso);
   const locale = getLocale(lang);
@@ -57,13 +61,84 @@ function eventCalendarAddress(event, dict = getDict()) {
 
 function createGoogleCalendarUrl(event, dict = getDict()) {
   const start = new Date(event.datetime);
-  const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const end = event.endDatetime
+    ? new Date(event.endDatetime)
+    : new Date(start.getTime() + 2 * 60 * 60 * 1000);
   const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const text = encodeURIComponent(`${eventName(event, dict)} - ${config.brideName} & ${config.groomName}`);
   const dates = `${fmt(start)}/${fmt(end)}`;
   const details = encodeURIComponent(dict.calendarDetails || "Wedding celebration");
   const location = encodeURIComponent(eventCalendarAddress(event, dict));
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+}
+
+function toIcsLocal(iso) {
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!m) return "";
+  return `${m[1]}${m[2]}${m[3]}T${m[4]}${m[5]}${m[6]}`;
+}
+
+function icsEscape(value) {
+  return String(value).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+}
+
+function eventEndIso(event) {
+  if (event.endDatetime) return event.endDatetime;
+  const start = new Date(event.datetime);
+  return new Date(start.getTime() + 2 * 60 * 60 * 1000).toISOString();
+}
+
+function buildAllEventsICS(dict = getDict()) {
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Kavya Sanjay Wedding//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH"
+  ];
+
+  config.events.forEach((event, index) => {
+    const uid = `${event.id || index}@kavyasanjay.com`;
+    lines.push(
+      "BEGIN:VEVENT",
+      `UID:${uid}`,
+      `DTSTAMP:${stamp}`,
+      `DTSTART:${toIcsLocal(event.datetime)}`,
+      `DTEND:${toIcsLocal(eventEndIso(event))}`,
+      `SUMMARY:${icsEscape(`${eventName(event, dict)} - ${config.brideName} & ${config.groomName}`)}`,
+      `LOCATION:${icsEscape(eventCalendarAddress(event, dict))}`,
+      `DESCRIPTION:${icsEscape(dict.calendarDetails || "Wedding celebration")}`,
+      "END:VEVENT"
+    );
+  });
+
+  lines.push("END:VCALENDAR");
+  return lines.join("\r\n");
+}
+
+function downloadAllEventsCalendar() {
+  const dict = getDict();
+  const blob = new Blob([buildAllEventsICS(dict)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "kavya-sanjay-wedding-events.ics";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function formatTelLink(phone) {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return digits ? `+${digits}` : phone;
+}
+
+function absoluteAssetUrl(path) {
+  if (!path || path.startsWith("http")) return path || "";
+  const base = (config.siteUrl || window.location.origin).replace(/\/$/, "");
+  return `${base}/${path.replace(/^\//, "")}`;
 }
 
 function renderInviteAndCouple() {
@@ -96,11 +171,13 @@ function renderEvents() {
     card.className = "card";
     const { weekday, dateTime } = fmtEventDate(event.datetime);
     const muhurtham = eventMuhurtham(event, dict);
+    const lunch = eventLunch(event, dict);
     const muhurthamHtml = muhurtham ? ` <span class="event-muhurtham">· ${muhurtham}</span>` : "";
+    const lunchHtml = lunch ? `<br>${lunch}` : "";
     card.innerHTML = `
       <h3>${eventName(event, dict)}${muhurthamHtml}</h3>
       <p class="event-day">${weekday}</p>
-      <p class="event-meta">${dateTime}<br>${eventLocationLabel(event, dict)}</p>
+      <p class="event-meta">${dateTime}<br>${eventLocationLabel(event, dict)}${lunchHtml}</p>
       <div class="calendar-row">
         <a class="btn btn-outline btn-sm" target="_blank" rel="noreferrer" href="${createGoogleCalendarUrl(event, dict)}">${dict.addToCalendar}</a>
       </div>`;
@@ -118,16 +195,51 @@ function renderVenue() {
   qs("#templeMapLink").href = temple.googleMapsLink || "#";
   qs("#templeMapLink").textContent = dict.directions || "Directions";
   qs("#templeMap").src = temple.embedMap;
+
+  const tips = qs("#venueTips");
+  if (tips) {
+    const tipLines = [dict.venueArriveBy, dict.venueEntrance, dict.venueAskFor].filter(Boolean);
+    tips.innerHTML = tipLines.map((line) => `<li>${line}</li>`).join("");
+  }
 }
 
-function renderSimpleCards(id, items, mapFn) {
-  const wrap = qs(id);
-  items.forEach((item) => {
+function renderContact() {
+  const wrap = qs("#contactGrid");
+  if (!wrap) return;
+  const dict = getDict();
+  wrap.innerHTML = "";
+  config.contact.forEach((person) => {
     const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = mapFn(item);
+    card.className = "card contact-card";
+    card.innerHTML = `
+      <h3>${person.title}</h3>
+      <p class="contact-phone-line">${person.phone}</p>`;
     wrap.append(card);
   });
+}
+
+function renderLivestream() {
+  const card = qs("#livestreamCard");
+  if (!card) return;
+  const dict = getDict();
+  const url = config.livestreamUrl?.trim();
+  if (url) {
+    card.innerHTML = `<a class="btn btn-primary" href="${url}" target="_blank" rel="noreferrer">${dict.watchLive}</a>`;
+    return;
+  }
+  card.innerHTML = `<p>${dict.livestreamNote}</p>`;
+}
+
+function updateRsvpDeadline() {
+  const el = qs("#rsvpDeadline");
+  if (!el) return;
+  el.textContent = getDict().rsvpDeadlineNote || "";
+}
+
+function updateAddAllCalendarButton() {
+  const btn = qs("#addAllCalendarBtn");
+  if (!btn) return;
+  btn.textContent = getDict().addAllToCalendar;
 }
 
 function renderTravel() {
@@ -256,6 +368,10 @@ function refreshLocalizedContent() {
   renderEvents();
   renderVenue();
   renderTravel();
+  renderContact();
+  renderLivestream();
+  updateRsvpDeadline();
+  updateAddAllCalendarButton();
   window.__countdownTick?.();
 }
 
@@ -297,7 +413,7 @@ function initLanguage() {
           : '"Inter", sans-serif';
     renderQuickNav();
     refreshLocalizedContent();
-    document.title = `${config.brideName} & ${config.groomName} | ${dict.navInvite}`;
+    applySeoMeta();
   };
   sel.addEventListener("change", () => apply(sel.value));
   apply("en");
@@ -360,7 +476,9 @@ function initQuickNav() {
 }
 
 function initFloatingActions() {
-  qs("#whatsAppFloat").href = `https://wa.me/${config.whatsappNumber}`;
+  const raw = String(config.whatsappNumber || "").replace(/\D/g, "");
+  const number = raw.length === 10 ? `1${raw}` : raw;
+  qs("#whatsAppFloat").href = number ? `https://wa.me/${number}` : "#";
 }
 
 function initAnimations() {
@@ -405,13 +523,17 @@ function injectSchema() {
 }
 
 function applySeoMeta() {
-  document.title = `${config.brideName} & ${config.groomName} | Wedding Invitation`;
+  const dict = getDict();
+  document.title = `${config.brideName} & ${config.groomName} | ${dict.navInvite}`;
   const desc = `You're invited to celebrate ${config.brideName} & ${config.groomName}'s wedding.`;
+  const ogImage = absoluteAssetUrl(config.invitationImage);
+  const siteUrl = config.siteUrl || window.location.origin;
   const set = (sel, val) => document.querySelector(sel)?.setAttribute("content", val);
   set('meta[name="description"]', desc);
   set('meta[property="og:title"]', `${config.brideName} & ${config.groomName}`);
   set('meta[property="og:description"]', desc);
-  set('meta[property="og:image"]', config.invitationImage);
+  set('meta[property="og:image"]', ogImage);
+  set('meta[property="og:url"]', `${siteUrl.replace(/\/$/, "")}/`);
 }
 
 function initLightbox() {
@@ -742,21 +864,17 @@ function initCoupleCinematic() {
   });
 }
 
+function initAddAllCalendar() {
+  qs("#addAllCalendarBtn")?.addEventListener("click", downloadAllEventsCalendar);
+}
+
 function boot() {
   renderInviteAndCouple();
   initInviteSection();
   initCoupleCinematic();
   initBackgroundMusic();
   renderRSVP();
-  renderSimpleCards(
-    "#contactGrid",
-    config.contact,
-    (x) => {
-      const digits = x.phone.replace(/\D/g, "");
-      const tel = digits.length === 10 ? `+1${digits}` : digits ? `+${digits}` : x.phone;
-      return `<h3>${x.title}</h3><p><a href="tel:${tel}">${x.phone}</a></p>`;
-    }
-  );
+  initAddAllCalendar();
 
   initCountdown();
   initLanguage();

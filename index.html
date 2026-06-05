@@ -10,15 +10,19 @@
     <meta name="description" content="Join us for the wedding celebration of Kavya and Sanjay." />
     <meta property="og:title" content="Kavya & Sanjay Wedding" />
     <meta property="og:description" content="You're invited to celebrate with us." />
-    <meta property="og:image" content="assets/wedding/invitation.jpeg" />
+    <meta property="og:image" content="https://kavyasanjay.com/assets/wedding/invitation.jpeg" />
+    <meta property="og:url" content="https://kavyasanjay.com/" />
     <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/favicon.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Serif+Kannada:wght@400;600&family=Noto+Serif+Telugu:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=12" />
+    <link rel="stylesheet" href="styles.css?v=13" />
   </head>
   <body>
     <audio id="bgMusic" preload="none" hidden>
@@ -98,6 +102,9 @@
         <span class="section-kicker" data-i18n="eventsKicker">Celebrations</span>
         <h2 data-i18n="events">EVENTS</h2>
         <div class="section-divider"></div>
+        <div class="events-toolbar">
+          <button type="button" id="addAllCalendarBtn" class="btn btn-outline btn-sm"></button>
+        </div>
         <div id="eventsGrid" class="events-grid"></div>
       </section>
 
@@ -112,6 +119,7 @@
               <p class="venue-hall" id="venueHall"></p>
               <p id="venueAddress"></p>
               <p id="venueParking"></p>
+              <ul class="venue-tips" id="venueTips"></ul>
               <a
                 id="templeMapLink"
                 class="btn btn-primary btn-sm"
@@ -136,6 +144,7 @@
           <span class="section-kicker" data-i18n="rsvpKicker">Join Us</span>
           <h2 data-i18n="rsvp">RSVP</h2>
           <div class="section-divider"></div>
+          <p id="rsvpDeadline" class="rsvp-deadline"></p>
           <p id="rsvpFormNote" class="rsvp-form-note hidden" data-i18n="rsvpFormNote"></p>
           <div id="googleFormContainer" class="google-form-container card hidden">
             <iframe
@@ -155,6 +164,13 @@
             >Open RSVP form</a
           >
         </div>
+      </section>
+
+      <section id="livestream" class="section fade-in">
+        <span class="section-kicker" data-i18n="livestreamKicker">Wedding Day</span>
+        <h2 data-i18n="livestreamTitle">Livestream</h2>
+        <div class="section-divider"></div>
+        <div id="livestreamCard" class="card livestream-card"></div>
       </section>
 
       <section id="travel" class="section fade-in">
@@ -188,7 +204,7 @@
       <img id="lightboxImage" alt="Gallery preview" />
     </dialog>
 
-    <script src="data/config.js?v=20"></script>
-    <script src="app.js?v=21"></script>
+    <script src="data/config.js?v=23"></script>
+    <script src="app.js?v=25"></script>
   </body>
 </html>
