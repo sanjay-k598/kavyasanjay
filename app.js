@@ -757,6 +757,13 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
   let player = null;
   let ready = false;
   let userStarted = false;
+  let gestureReceived = false;
+
+  const label = btn?.querySelector(".invite-music-label");
+
+  // Until the YouTube player is ready, prevent the UI from looking "ready".
+  // (It will be removed in onReady.)
+  btn?.classList.add("is-unavailable");
 
   const play = () => {
     if (!player || !ready) return false;
@@ -810,6 +817,16 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
         onReady: () => {
           ready = true;
           btn?.classList.remove("is-unavailable");
+
+          // Try autoplay after the player becomes ready; if the browser blocks,
+          // the user can tap the button (or anywhere) to enable sound.
+          if (config.musicAutoplay !== false) {
+            if (!attemptPlay()) {
+              if (label) label.textContent = "Tap to allow sound";
+            }
+          } else if (gestureReceived) {
+            attemptPlay();
+          }
         },
         onStateChange: (event) => {
           if (event.data === YT.PlayerState.PLAYING) setPlayingUi(true);
@@ -817,6 +834,13 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
         }
       }
     });
+  };
+
+  const attemptPlay = () => {
+    if (userStarted) return true;
+    const ok = play();
+    if (!ok && label) label.textContent = "Tap to allow sound";
+    return ok;
   };
 
   if (window.YT?.Player) {
@@ -833,19 +857,23 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
   btn?.addEventListener("click", (e) => {
     e.stopPropagation();
     if (!ready) return;
+    gestureReceived = true;
     if (!userStarted) {
-      play();
+      attemptPlay();
       return;
     }
     toggle();
   });
 
   const startOnGesture = () => {
-    if (!userStarted) play();
+    gestureReceived = true;
+    attemptPlay();
   };
 
-  document.addEventListener("click", startOnGesture, { once: true });
-  document.addEventListener("touchstart", startOnGesture, { once: true, passive: true });
+  // Don't use { once: true }: on mobile the first tap can happen before the
+  // YouTube player becomes ready, and the previous implementation never retried.
+  document.addEventListener("click", startOnGesture, { passive: true });
+  document.addEventListener("touchstart", startOnGesture, { passive: true });
 
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && userStarted && ready) play();
