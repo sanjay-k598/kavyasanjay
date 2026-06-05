@@ -29,6 +29,16 @@ Guest RSVPs on your website are saved in **Google Forms → Google Sheets**, tie
 You can also enable **email notifications** for new responses:
 - In the linked Sheet: **Tools → Notification rules → A user submits a form**.
 
+### Email both Sanjay & Kavya on every RSVP
+
+Google’s built-in “Get email notifications” only goes to one account. To **email both of you** with guest name and count, use the Apps Script in `scripts/rsvp-email-notifications.gs`:
+
+1. Form → **Responses** → **Link to Sheets**
+2. Sheet → **Extensions** → **Apps Script** → paste the script
+3. Set both Gmail addresses in `NOTIFY_EMAILS`
+4. **Triggers** → add **On form submit** → authorize → test RSVP
+
+
 ## 3. Embed the form on your wedding site
 
 1. In the form, click **Send** (top right).

@@ -3,19 +3,38 @@ const config = window.WEDDING_CONFIG;
 const qs = (sel) => document.querySelector(sel);
 const qsa = (sel) => [...document.querySelectorAll(sel)];
 
-function fmtDate(iso) {
-  return new Date(iso).toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  });
+let currentLang = "en";
+
+const LOCALE_MAP = { en: "en-US", te: "te-IN", kn: "kn-IN" };
+
+function getDict(lang = currentLang) {
+  return config.i18n[lang] || config.i18n.en;
 }
 
-function fmtEventDate(iso) {
+function getLocale(lang = currentLang) {
+  return LOCALE_MAP[lang] || "en-US";
+}
+
+function eventDictKey(event, suffix = "") {
+  const base = event.id || event.name;
+  return suffix ? `event_${base}_${suffix}` : `event_${base}`;
+}
+
+function eventName(event, dict = getDict()) {
+  return dict[eventDictKey(event)] || event.name || event.id || "";
+}
+
+function eventMuhurtham(event, dict = getDict()) {
+  return dict[eventDictKey(event, "muhurtham")] || event.muhurtham || "";
+}
+
+function fmtEventDate(iso, lang = currentLang) {
   const d = new Date(iso);
+  const locale = getLocale(lang);
   if (Number.isNaN(d.getTime())) return { weekday: "", dateTime: "" };
   return {
-    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
-    dateTime: d.toLocaleString("en-US", {
+    weekday: d.toLocaleDateString(locale, { weekday: "long" }),
+    dateTime: d.toLocaleString(locale, {
       month: "long",
       day: "numeric",
       year: "numeric",
@@ -25,27 +44,25 @@ function fmtEventDate(iso) {
   };
 }
 
-function eventLocationLabel(event) {
+function eventLocationLabel(event, dict = getDict()) {
   if (event.atResidence) {
-    const note = event.locationNote ? ` ${event.locationNote}` : "";
-    return `At our residence${note}`;
+    return config.residence?.address || "29581 Greening St, Farmington Hills, MI 48334";
   }
-  return event.location || "";
+  return dict[eventDictKey(event, "location")] || event.location || "";
 }
 
-function eventCalendarAddress(event) {
-  if (event.atResidence) return config.residence?.address || "At our residence";
-  return event.location || "";
+function eventCalendarAddress(event, dict = getDict()) {
+  return eventLocationLabel(event, dict);
 }
 
-function createGoogleCalendarUrl(event) {
+function createGoogleCalendarUrl(event, dict = getDict()) {
   const start = new Date(event.datetime);
   const end = new Date(start.getTime() + 2 * 60 * 60 * 1000);
   const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-  const text = encodeURIComponent(`${event.name} - ${config.brideName} & ${config.groomName}`);
+  const text = encodeURIComponent(`${eventName(event, dict)} - ${config.brideName} & ${config.groomName}`);
   const dates = `${fmt(start)}/${fmt(end)}`;
-  const details = encodeURIComponent("Wedding celebration");
-  const location = encodeURIComponent(eventCalendarAddress(event));
+  const details = encodeURIComponent(dict.calendarDetails || "Wedding celebration");
+  const location = encodeURIComponent(eventCalendarAddress(event, dict));
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
 }
 
@@ -61,9 +78,7 @@ function renderInviteAndCouple() {
   qs("#couplePhotoImage").src = config.couplePhoto;
 
   qs("#coupleNames").innerHTML = `${config.brideName}<span class="amp">&</span>${config.groomName}`;
-  qs("#weddingHashtag").textContent = config.weddingDateDisplay || "";
   qs("#brandMark").textContent = `${config.brideName[0]} & ${config.groomName[0]}`;
-  qs("#footerText").textContent = `${config.brideName} & ${config.groomName} · With love ♥️`;
 
   const dateEl = qs("#heroDate");
   if (dateEl) {
@@ -73,19 +88,21 @@ function renderInviteAndCouple() {
 
 function renderEvents() {
   const grid = qs("#eventsGrid");
+  if (!grid) return;
+  const dict = getDict();
+  grid.innerHTML = "";
   config.events.forEach((event) => {
     const card = document.createElement("article");
     card.className = "card";
     const { weekday, dateTime } = fmtEventDate(event.datetime);
-    const muhurthamHtml = event.muhurtham
-      ? ` <span class="event-muhurtham">· ${event.muhurtham}</span>`
-      : "";
+    const muhurtham = eventMuhurtham(event, dict);
+    const muhurthamHtml = muhurtham ? ` <span class="event-muhurtham">· ${muhurtham}</span>` : "";
     card.innerHTML = `
-      <h3>${event.name}${muhurthamHtml}</h3>
+      <h3>${eventName(event, dict)}${muhurthamHtml}</h3>
       <p class="event-day">${weekday}</p>
-      <p class="event-meta">${dateTime}<br>${eventLocationLabel(event)}</p>
+      <p class="event-meta">${dateTime}<br>${eventLocationLabel(event, dict)}</p>
       <div class="calendar-row">
-        <a class="btn btn-outline btn-sm" target="_blank" rel="noreferrer" href="${createGoogleCalendarUrl(event)}">Add to Calendar</a>
+        <a class="btn btn-outline btn-sm" target="_blank" rel="noreferrer" href="${createGoogleCalendarUrl(event, dict)}">${dict.addToCalendar}</a>
       </div>`;
     grid.append(card);
   });
@@ -93,19 +110,14 @@ function renderEvents() {
 
 function renderVenue() {
   const temple = config.venue;
-  qs("#venueName").textContent = temple.name;
-  qs("#venueHall").textContent = temple.hall || "";
+  const dict = getDict();
+  qs("#venueName").textContent = dict.venueName || temple.name;
+  qs("#venueHall").textContent = dict.venueHall || temple.hall || "";
   qs("#venueAddress").textContent = temple.address;
-  qs("#venueParking").textContent = temple.parking;
+  qs("#venueParking").textContent = dict.venueParking || temple.parking;
   qs("#templeMapLink").href = temple.googleMapsLink || "#";
+  qs("#templeMapLink").textContent = dict.directions || "Directions";
   qs("#templeMap").src = temple.embedMap;
-
-  const home = config.residence;
-  if (home) {
-    qs("#residenceAddress").textContent = home.address;
-    qs("#residenceMapLink").href = home.googleMapsLink || "#";
-    qs("#residenceMap").src = home.embedMap || "";
-  }
 }
 
 function renderSimpleCards(id, items, mapFn) {
@@ -120,15 +132,17 @@ function renderSimpleCards(id, items, mapFn) {
 
 function renderTravel() {
   const wrap = qs("#travelGrid");
-  const dict = window.__i18n || config.i18n.en;
+  if (!wrap) return;
+  const dict = getDict();
   const a = config.arrival;
+  wrap.innerHTML = "";
 
   const arrivalCard = document.createElement("article");
   arrivalCard.className = "card";
   arrivalCard.innerHTML = `
-    <h3>${a.title}</h3>
-    <p>${a.text}</p>
-    <a class="btn btn-outline btn-sm" href="${a.link}" target="_blank" rel="noreferrer" data-i18n="dtwInfo">DTW Airport Info</a>`;
+    <h3>${dict.arrivalTitle || a.title}</h3>
+    <p>${dict.arrivalText || a.text}</p>
+    <a class="btn btn-outline btn-sm" href="${a.link}" target="_blank" rel="noreferrer">${dict.dtwInfo}</a>`;
   wrap.append(arrivalCard);
 
   const hotels = config.hotelBooking;
@@ -136,9 +150,9 @@ function renderTravel() {
     const hotelCard = document.createElement("article");
     hotelCard.className = "card";
     hotelCard.innerHTML = `
-      <h3 data-i18n="nearbyHotels">${dict.nearbyHotels || "Nearby Hotels"}</h3>
-      <p data-i18n="hotelsNote">${dict.hotelsNote || hotels.note}</p>
-      <a class="btn btn-primary btn-sm" href="${hotels.bookUrl}" target="_blank" rel="noreferrer" data-i18n="bookHotels">Book Hotels</a>`;
+      <h3>${dict.nearbyHotels}</h3>
+      <p>${dict.hotelsNote || hotels.note}</p>
+      <a class="btn btn-primary btn-sm" href="${hotels.bookUrl}" target="_blank" rel="noreferrer">${dict.bookHotels}</a>`;
     wrap.append(hotelCard);
   }
 }
@@ -186,13 +200,13 @@ function renderRSVP() {
 function initCountdown() {
   const wrap = qs("#countdown");
   const target = new Date(`${config.weddingDate} ${config.muhurthamTime || "06:00"}`);
-  const labels = ["Days", "Hours", "Mins"];
 
   const renderUnits = (d, h, m) => {
+    const dict = getDict();
     wrap.innerHTML = [
-      { v: d, l: labels[0] },
-      { v: h, l: labels[1] },
-      { v: m, l: labels[2] }
+      { v: d, l: dict.countdownDays },
+      { v: h, l: dict.countdownHours },
+      { v: m, l: dict.countdownMins }
     ]
       .map(
         (u) =>
@@ -202,13 +216,14 @@ function initCountdown() {
   };
 
   const tick = () => {
+    const dict = getDict();
     const diff = target - new Date();
     if (Number.isNaN(diff)) {
-      wrap.innerHTML = `<p style="width:100%;text-align:center;color:var(--muted);font-size:0.85rem;">July 2, 2026</p>`;
+      wrap.innerHTML = `<p style="width:100%;text-align:center;color:var(--muted);font-size:0.85rem;">${dict.countdownFallback}</p>`;
       return;
     }
     if (diff <= 0) {
-      wrap.innerHTML = `<p style="width:100%;text-align:center;font-family:Cinzel,serif;color:var(--primary);">It's wedding day — July 2!</p>`;
+      wrap.innerHTML = `<p style="width:100%;text-align:center;font-family:Cinzel,serif;color:var(--primary);">${dict.countdownWeddingDay}</p>`;
       return;
     }
     const d = Math.floor(diff / 86400000);
@@ -216,8 +231,44 @@ function initCountdown() {
     const m = Math.floor((diff / 60000) % 60);
     renderUnits(d, h, m);
   };
+  window.__countdownTick = tick;
   tick();
   setInterval(tick, 30000);
+}
+
+function updateGuestGreeting() {
+  const guest = new URLSearchParams(location.search).get("guest");
+  const el = qs("#guestGreeting");
+  if (!guest || !el) return;
+  const dict = getDict();
+  el.textContent = (dict.guestGreeting || "").replace("{guest}", guest);
+}
+
+function updateLocalizedChrome() {
+  const dict = getDict();
+  qs("#weddingHashtag").textContent = dict.weddingDateDisplay || config.weddingDateDisplay || "";
+  qs("#footerText").textContent = `${config.brideName} & ${config.groomName} · ${dict.footerWithLove}`;
+  updateGuestGreeting();
+}
+
+function refreshLocalizedContent() {
+  updateLocalizedChrome();
+  renderEvents();
+  renderVenue();
+  renderTravel();
+  window.__countdownTick?.();
+}
+
+function applyI18nAttributes(dict) {
+  qsa("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    if (!dict[key]) return;
+    if (el.tagName === "INPUT" || el.tagName === "BUTTON") {
+      el.value = dict[key];
+    } else {
+      el.textContent = dict[key];
+    }
+  });
 }
 
 function initLanguage() {
@@ -232,18 +283,11 @@ function initLanguage() {
   });
 
   const apply = (lang) => {
-    const dict = config.i18n[lang] || config.i18n.en;
+    currentLang = lang;
+    const dict = getDict(lang);
     window.__i18n = dict;
-    qsa("[data-i18n]").forEach((el) => {
-      const key = el.dataset.i18n;
-      if (dict[key]) {
-        if (el.tagName === "INPUT" || el.tagName === "BUTTON") {
-          el.value = dict[key];
-        } else {
-          el.textContent = dict[key];
-        }
-      }
-    });
+    window.__lang = lang;
+    applyI18nAttributes(dict);
     document.documentElement.lang = lang;
     document.body.style.fontFamily =
       lang === "te"
@@ -251,6 +295,9 @@ function initLanguage() {
         : lang === "kn"
           ? '"Noto Serif Kannada", "Inter", sans-serif'
           : '"Inter", sans-serif';
+    renderQuickNav();
+    refreshLocalizedContent();
+    document.title = `${config.brideName} & ${config.groomName} | ${dict.navInvite}`;
   };
   sel.addEventListener("change", () => apply(sel.value));
   apply("en");
@@ -263,25 +310,39 @@ function initTheme() {
   });
 }
 
-function initQuickNav() {
-  const sections = ["invitation", "couple-photo", "events", "venue", "rsvp", "travel", "contact"];
-  const labels = {
-    invitation: "Invite",
-    "couple-photo": "Us",
-    events: "Events",
-    venue: "Venue",
-    rsvp: "RSVP",
-    travel: "Travel",
-    contact: "Contact"
+const NAV_SECTIONS = ["invitation", "couple-photo", "events", "venue", "rsvp", "travel", "contact"];
+
+function navLabel(id, dict = getDict()) {
+  const map = {
+    invitation: dict.navInvite,
+    "couple-photo": dict.navUs,
+    events: dict.navEvents,
+    venue: dict.navVenue,
+    rsvp: dict.navRsvp,
+    travel: dict.navTravel,
+    contact: dict.navContact
   };
+  return map[id] || id;
+}
+
+function renderQuickNav() {
   const nav = qs("#quickNav");
-  sections.forEach((id) => {
+  if (!nav) return;
+  const activeHref = nav.querySelector("a.active")?.getAttribute("href");
+  nav.innerHTML = "";
+  NAV_SECTIONS.forEach((id) => {
     const a = document.createElement("a");
     a.href = `#${id}`;
-    a.textContent = labels[id];
+    a.textContent = navLabel(id);
+    if (activeHref === `#${id}`) a.classList.add("active");
     nav.append(a);
   });
+}
 
+function initQuickNav() {
+  renderQuickNav();
+
+  const nav = qs("#quickNav");
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -292,7 +353,7 @@ function initQuickNav() {
     },
     { threshold: 0.35 }
   );
-  sections.forEach((id) => {
+  NAV_SECTIONS.forEach((id) => {
     const el = qs(`#${id}`);
     if (el) observer.observe(el);
   });
@@ -327,10 +388,7 @@ function initAnimations() {
 }
 
 function initGuestGreeting() {
-  const guest = new URLSearchParams(location.search).get("guest");
-  if (guest) {
-    qs("#guestGreeting").textContent = `Dear ${guest} family, we can't wait to celebrate with you.`;
-  }
+  updateGuestGreeting();
 }
 
 function injectSchema() {
@@ -489,19 +547,24 @@ function initIntroTemplateVideo() {
 }
 
 function initInviteSection() {
-  if (config.introVideoMode === "template") {
+  const templateWrap = qs("#inviteTemplateWrap");
+  const cardWrap = qs("#inviteCardWrap");
+  const inviteSection = qs("#invitation");
+
+  const useVideo =
+    config.introVideoEnabled !== false &&
+    config.introVideoMode === "template" &&
+    Boolean(config.introVideoUrl?.trim());
+
+  if (useVideo) {
+    cardWrap?.setAttribute("hidden", "");
     initIntroTemplateVideo();
     return;
   }
 
-  initPhotoCinematic({
-    cinematic: qs("#inviteCinematic"),
-    generate: qs("#inviteGenerate"),
-    frame: qs("#inviteFrame"),
-    img: qs("#invitationImage"),
-    lightboxSrc: () => config.invitationImage
-  });
-  initIntroGreenScreen();
+  templateWrap?.setAttribute("hidden", "");
+  cardWrap?.removeAttribute("hidden");
+  inviteSection?.classList.add("invite-section--image-only");
 }
 
 function initBackgroundMusic() {
@@ -684,10 +747,7 @@ function boot() {
   initInviteSection();
   initCoupleCinematic();
   initBackgroundMusic();
-  renderEvents();
-  renderVenue();
   renderRSVP();
-  renderTravel();
   renderSimpleCards(
     "#contactGrid",
     config.contact,

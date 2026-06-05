@@ -170,6 +170,10 @@ a {
   background: var(--surface);
 }
 
+.invite-section--image-only .invite-card-wrap {
+  border-radius: var(--radius-lg);
+}
+
 .invite-card-wrap img {
   width: 100%;
   display: block;
