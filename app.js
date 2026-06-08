@@ -736,82 +736,48 @@ function initInviteSection() {
     return;
   }
 
-  // Show the music button overlay even when the invite hero is image-only.
-  // We hide only the template video, and keep the template wrapper visible
-  // so the user can see the music UI on mobile.
-  templateWrap?.removeAttribute("hidden");
+  // Image-only invite: hide the unused template video wrapper.
+  templateWrap?.setAttribute("hidden", "");
   cardWrap?.removeAttribute("hidden");
   inviteSection?.classList.add("invite-section--image-only");
 
   const templateVideo = qs("#introTemplateVideo");
   if (templateVideo) {
     templateVideo.setAttribute("hidden", "");
-    // Ensure we don't accidentally load/play the video in this mode.
     templateVideo.removeAttribute("src");
     templateVideo.load?.();
   }
 }
 
-function isCoarsePointerDevice() {
-  return window.matchMedia("(pointer: coarse)").matches;
-}
-
-function bindMusicButton(btn, onActivate) {
-  if (!btn) return;
-  btn.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onActivate(event);
-  });
+function enableMusicOnFirstInteraction(action) {
+  const resume = () => {
+    document.removeEventListener("pointerdown", resume);
+    document.removeEventListener("touchstart", resume);
+    action();
+  };
+  document.addEventListener("pointerdown", resume, { passive: true });
+  document.addEventListener("touchstart", resume, { passive: true });
 }
 
 function initBackgroundMusic() {
-  const btn = qs("#inviteMusicBtn");
-  const label = btn?.querySelector(".invite-music-label");
-  const dict = () => window.__i18n || config.i18n.en;
+  if (config.musicAutoplay === false) return;
+
   const mp3 = config.musicUrl?.trim();
   const ytId = config.youtubeMusicId?.trim();
   const useMp3 = Boolean(mp3 && !mp3.includes("{{"));
   const useYouTube = Boolean(ytId && !ytId.includes("{{") && !useMp3);
 
-  const setPlayingUi = (playing) => {
-    btn?.classList.toggle("is-playing", playing);
-    if (!label) return;
-    const t = dict();
-    label.textContent = playing ? t.pauseMusic || "Pause music" : t.playMusic || "Play music";
-  };
-
-  const setLoadingUi = () => {
-    btn?.classList.add("is-loading");
-    if (label) label.textContent = dict().loadingMusic || "Loading music...";
-  };
-
-  const setTapHintUi = () => {
-    btn?.classList.remove("is-loading", "is-unavailable");
-    if (!label) return;
-    if (isCoarsePointerDevice()) {
-      label.textContent = dict().tapToPlayMusic || "Tap to play music";
-    } else {
-      label.textContent = dict().playMusic || "Play music";
-    }
-  };
-
-  if (!useMp3 && !useYouTube) {
-    btn?.classList.add("is-unavailable");
-    if (label) label.textContent = "Music unavailable";
-    return;
-  }
-
   if (useMp3) {
-    initMp3BackgroundMusic(btn, label, mp3, setPlayingUi, setLoadingUi, setTapHintUi);
+    initMp3Autoplay(mp3);
     return;
   }
 
-  initYouTubeBackgroundMusic(ytId, btn, label, setPlayingUi, setLoadingUi, setTapHintUi);
+  if (useYouTube) {
+    initYouTubeAutoplay(ytId);
+  }
 }
 
-function initMp3BackgroundMusic(btn, label, mp3, setPlayingUi, setLoadingUi, setTapHintUi) {
-  const dict = () => window.__i18n || config.i18n.en;
+function initMp3Autoplay(mp3) {
   const audio = qs("#bgMusic");
   const source = audio?.querySelector("source");
   if (!audio) return;
@@ -819,86 +785,43 @@ function initMp3BackgroundMusic(btn, label, mp3, setPlayingUi, setLoadingUi, set
   audio.setAttribute("playsinline", "");
   if (source) source.src = mp3;
   audio.loop = config.musicLoop !== false;
-  audio.load();
+  audio.volume = (config.musicVolume ?? 60) / 100;
 
-  setLoadingUi();
-
-  audio.addEventListener("canplaythrough", setTapHintUi, { once: true });
-  audio.addEventListener("error", () => {
-    btn?.classList.add("is-unavailable");
-    btn?.classList.remove("is-loading");
-    if (label) label.textContent = "Music unavailable";
-  });
-
-  const toggleMp3 = async () => {
-    if (btn?.classList.contains("is-unavailable")) return;
+  const start = async () => {
     try {
-      if (audio.paused) {
-        await audio.play();
-        setPlayingUi(true);
-      } else {
-        audio.pause();
-        setPlayingUi(false);
-      }
+      await audio.play();
     } catch {
-      btn?.classList.add("is-unavailable");
-      if (label) label.textContent = dict().tapToPlayMusic || "Tap to play music";
+      enableMusicOnFirstInteraction(() => audio.play().catch(() => {}));
     }
   };
 
-  bindMusicButton(btn, () => {
-    if (audio.readyState >= 2) toggleMp3();
-  });
-
-  if (config.musicAutoplay !== false && !isCoarsePointerDevice()) {
-    document.addEventListener(
-      "click",
-      () => {
-        toggleMp3();
-      },
-      { once: true }
-    );
-  }
+  audio.addEventListener("canplaythrough", start, { once: true });
+  audio.addEventListener("error", () => {});
+  audio.load();
 }
 
-function initYouTubeBackgroundMusic(videoId, btn, label, setPlayingUi, setLoadingUi, setTapHintUi) {
+function initYouTubeAutoplay(videoId) {
   let player = null;
-  let ready = false;
-  let userStarted = false;
+  let started = false;
 
-  setLoadingUi();
-  btn?.classList.add("is-unavailable");
-
-  const playInGesture = () => {
-    if (!player || !ready) return false;
+  const start = () => {
+    if (!player || started) return;
     try {
-      // iOS requires playVideo() inside the tap handler. Start muted, then unmute.
-      player.mute();
-      player.playVideo();
       player.setVolume(config.musicVolume ?? 60);
       player.unMute();
-      userStarted = true;
-      setPlayingUi(true);
-      return true;
+      player.playVideo();
+      started = true;
     } catch {
-      return false;
-    }
-  };
-
-  const pause = () => {
-    if (!player || !ready) return;
-    player.pauseVideo();
-    setPlayingUi(false);
-  };
-
-  const toggle = () => {
-    if (!player || !ready) return;
-    const state = player.getPlayerState?.();
-    if (state === YT.PlayerState.PLAYING) {
-      userStarted = false;
-      pause();
-    } else {
-      playInGesture();
+      enableMusicOnFirstInteraction(() => {
+        try {
+          player?.setVolume(config.musicVolume ?? 60);
+          player?.unMute();
+          player?.playVideo();
+          started = true;
+        } catch {
+          /* ignored */
+        }
+      });
     }
   };
 
@@ -908,7 +831,7 @@ function initYouTubeBackgroundMusic(videoId, btn, label, setPlayingUi, setLoadin
       width: "1",
       videoId,
       playerVars: {
-        autoplay: 0,
+        autoplay: 1,
         mute: 1,
         loop: 1,
         playlist: videoId,
@@ -921,41 +844,14 @@ function initYouTubeBackgroundMusic(videoId, btn, label, setPlayingUi, setLoadin
         origin: window.location.origin
       },
       events: {
-        onReady: () => {
-          ready = true;
-          btn?.classList.remove("is-unavailable", "is-loading");
-          setTapHintUi();
-
-          if (config.musicAutoplay !== false && !isCoarsePointerDevice()) {
-            playInGesture();
-          }
-        },
+        onReady: start,
         onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PLAYING) setPlayingUi(true);
-          if (event.data === YT.PlayerState.PAUSED) setPlayingUi(false);
+          if (event.data === YT.PlayerState.PLAYING && !started) started = true;
         },
-        onError: () => {
-          btn?.classList.add("is-unavailable");
-          btn?.classList.remove("is-loading");
-          if (label) label.textContent = "Music unavailable";
-        }
+        onError: () => {}
       }
     });
   };
-
-  bindMusicButton(btn, () => {
-    if (!ready) {
-      setLoadingUi();
-      return;
-    }
-    if (!userStarted) {
-      if (!playInGesture() && label) {
-        label.textContent = (window.__i18n || config.i18n.en).tapToPlayMusic || "Tap to play music";
-      }
-      return;
-    }
-    toggle();
-  });
 
   if (window.YT?.Player) {
     createPlayer();
@@ -964,7 +860,7 @@ function initYouTubeBackgroundMusic(videoId, btn, label, setPlayingUi, setLoadin
   }
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && userStarted && ready) playInGesture();
+    if (document.visibilityState === "visible" && started) start();
   });
 }
 
