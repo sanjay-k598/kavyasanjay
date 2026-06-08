@@ -282,22 +282,9 @@ function toGoogleFormEmbedUrl(url) {
 
 function renderRsvpFormHeader() {
   const namesEl = qs("#rsvpCoupleNames");
-  const detailsEl = qs("#rsvpFormDetails");
-  if (!namesEl || !detailsEl) return;
+  if (!namesEl) return;
 
-  const dict = getDict();
   namesEl.innerHTML = `${config.brideName}<span class="amp">&</span>${config.groomName}`;
-  const venue = config.venue;
-  const contact = config.contact?.[0];
-  detailsEl.innerHTML = [
-    venue?.name && venue?.address
-      ? `<strong>${venue.name}</strong>, ${venue.address}`
-      : "",
-    dict.weddingDateDisplay || config.weddingDateDisplay || "",
-    contact?.phone ? `Questions? ${contact.title || "Call"} ${contact.phone}` : ""
-  ]
-    .filter(Boolean)
-    .join("<br>");
 }
 
 function renderRSVP() {

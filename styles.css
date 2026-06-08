@@ -856,7 +856,7 @@ a {
 }
 
 .rsvp-form-header h3 {
-  margin: 0 0 0.65rem;
+  margin: 0;
   font-size: clamp(1.45rem, 6vw, 1.9rem);
   line-height: 1.15;
   color: var(--text);
@@ -869,13 +869,6 @@ a {
   font-weight: 400;
   color: var(--primary);
   margin: 0.12em 0;
-}
-
-.rsvp-form-header p {
-  margin: 0;
-  font-size: 0.84rem;
-  line-height: 1.55;
-  color: var(--muted);
 }
 
 .google-form-embed-wrap {
