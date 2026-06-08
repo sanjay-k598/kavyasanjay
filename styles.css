@@ -1316,6 +1316,11 @@ dialog::backdrop {
   font-family: "Cinzel", Georgia, serif;
 }
 
+.footer-love {
+  color: #c0392b;
+  margin-left: 0.15em;
+}
+
 /* Desktop enhancements */
 @media (min-width: 768px) {
   body {

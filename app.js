@@ -409,7 +409,7 @@ function updateGuestGreeting() {
 function updateLocalizedChrome() {
   const dict = getDict();
   qs("#weddingHashtag").textContent = dict.weddingDateDisplay || config.weddingDateDisplay || "";
-  qs("#footerText").textContent = `${config.brideName} & ${config.groomName} · ${dict.footerWithLove}`;
+  qs("#footerText").innerHTML = `${config.brideName} & ${config.groomName} · ${dict.footerWithLove} <span class="footer-love" aria-hidden="true">♥</span>`;
   updateGuestGreeting();
 }
 
