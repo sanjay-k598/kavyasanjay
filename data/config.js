@@ -25,6 +25,7 @@ window.WEDDING_CONFIG = {
   livestreamUrl: "",
   emergencyNumber: "+91 90000 90000",
   /** YouTube background music: https://www.youtube.com/watch?v=lBVRsXXDJA0 */
+  /** For reliable mobile playback, add assets/music/invite.mp3 and set musicUrl below. */
   youtubeMusicId: "lBVRsXXDJA0",
   musicUrl: "",
   musicLoop: true,
@@ -116,6 +117,8 @@ window.WEDDING_CONFIG = {
       directions: "Directions",
       playMusic: "Play music",
       pauseMusic: "Pause music",
+      loadingMusic: "Loading music...",
+      tapToPlayMusic: "Tap to play music",
       rsvpKicker: "Join Us",
       rsvp: "RSVP",
       fullName: "Full Name",

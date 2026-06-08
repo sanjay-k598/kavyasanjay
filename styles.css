@@ -388,7 +388,12 @@ a {
 
 .invite-music-btn.is-unavailable {
   opacity: 0.55;
-  cursor: not-allowed;
+  cursor: wait;
+}
+
+.invite-music-btn.is-loading {
+  opacity: 0.85;
+  cursor: wait;
 }
 
 .invite-music-icon {
@@ -1045,10 +1050,12 @@ select {
 
 .youtube-music-host {
   position: fixed;
-  width: 0;
-  height: 0;
+  width: 1px;
+  height: 1px;
+  left: 0;
+  bottom: 0;
   overflow: hidden;
-  opacity: 0;
+  opacity: 0.01;
   pointer-events: none;
   z-index: -1;
 }
@@ -1322,6 +1329,18 @@ dialog::backdrop {
 }
 
 /* Desktop enhancements */
+@media (max-width: 767px) {
+  .invite-music-btn {
+    position: fixed;
+    right: 0.75rem;
+    bottom: 7.75rem;
+    z-index: 99;
+    opacity: 1 !important;
+    transform: none !important;
+    touch-action: manipulation;
+  }
+}
+
 @media (min-width: 768px) {
   body {
     padding-bottom: 0;

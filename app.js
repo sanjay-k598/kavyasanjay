@@ -752,12 +752,27 @@ function initInviteSection() {
   }
 }
 
+function isCoarsePointerDevice() {
+  return window.matchMedia("(pointer: coarse)").matches;
+}
+
+function bindMusicButton(btn, onActivate) {
+  if (!btn) return;
+  btn.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onActivate(event);
+  });
+}
+
 function initBackgroundMusic() {
   const btn = qs("#inviteMusicBtn");
   const label = btn?.querySelector(".invite-music-label");
   const dict = () => window.__i18n || config.i18n.en;
-  const ytId = config.youtubeMusicId?.trim();
   const mp3 = config.musicUrl?.trim();
+  const ytId = config.youtubeMusicId?.trim();
+  const useMp3 = Boolean(mp3 && !mp3.includes("{{"));
+  const useYouTube = Boolean(ytId && !ytId.includes("{{") && !useMp3);
 
   const setPlayingUi = (playing) => {
     btn?.classList.toggle("is-playing", playing);
@@ -766,30 +781,57 @@ function initBackgroundMusic() {
     label.textContent = playing ? t.pauseMusic || "Pause music" : t.playMusic || "Play music";
   };
 
-  if (ytId && !ytId.includes("{{")) {
-    initYouTubeBackgroundMusic(ytId, btn, setPlayingUi);
-    return;
-  }
+  const setLoadingUi = () => {
+    btn?.classList.add("is-loading");
+    if (label) label.textContent = dict().loadingMusic || "Loading music...";
+  };
 
-  if (!mp3 || mp3.includes("{{")) {
+  const setTapHintUi = () => {
+    btn?.classList.remove("is-loading", "is-unavailable");
+    if (!label) return;
+    if (isCoarsePointerDevice()) {
+      label.textContent = dict().tapToPlayMusic || "Tap to play music";
+    } else {
+      label.textContent = dict().playMusic || "Play music";
+    }
+  };
+
+  if (!useMp3 && !useYouTube) {
     btn?.classList.add("is-unavailable");
     if (label) label.textContent = "Music unavailable";
     return;
   }
 
+  if (useMp3) {
+    initMp3BackgroundMusic(btn, label, mp3, setPlayingUi, setLoadingUi, setTapHintUi);
+    return;
+  }
+
+  initYouTubeBackgroundMusic(ytId, btn, label, setPlayingUi, setLoadingUi, setTapHintUi);
+}
+
+function initMp3BackgroundMusic(btn, label, mp3, setPlayingUi, setLoadingUi, setTapHintUi) {
+  const dict = () => window.__i18n || config.i18n.en;
   const audio = qs("#bgMusic");
   const source = audio?.querySelector("source");
+  if (!audio) return;
+
+  audio.setAttribute("playsinline", "");
   if (source) source.src = mp3;
   audio.loop = config.musicLoop !== false;
-  audio?.load();
+  audio.load();
 
-  audio?.addEventListener("error", () => {
+  setLoadingUi();
+
+  audio.addEventListener("canplaythrough", setTapHintUi, { once: true });
+  audio.addEventListener("error", () => {
     btn?.classList.add("is-unavailable");
+    btn?.classList.remove("is-loading");
     if (label) label.textContent = "Music unavailable";
   });
 
   const toggleMp3 = async () => {
-    if (btn.classList.contains("is-unavailable") || !audio) return;
+    if (btn?.classList.contains("is-unavailable")) return;
     try {
       if (audio.paused) {
         await audio.play();
@@ -799,41 +841,42 @@ function initBackgroundMusic() {
         setPlayingUi(false);
       }
     } catch {
-      btn.classList.add("is-unavailable");
-      if (label) label.textContent = "Tap to allow sound";
+      btn?.classList.add("is-unavailable");
+      if (label) label.textContent = dict().tapToPlayMusic || "Tap to play music";
     }
   };
 
-  btn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleMp3();
+  bindMusicButton(btn, () => {
+    if (audio.readyState >= 2) toggleMp3();
   });
 
-  if (config.musicAutoplay !== false) {
-    const start = () => toggleMp3();
-    document.addEventListener("click", start, { once: true });
-    document.addEventListener("touchstart", start, { once: true, passive: true });
+  if (config.musicAutoplay !== false && !isCoarsePointerDevice()) {
+    document.addEventListener(
+      "click",
+      () => {
+        toggleMp3();
+      },
+      { once: true }
+    );
   }
 }
 
-function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
+function initYouTubeBackgroundMusic(videoId, btn, label, setPlayingUi, setLoadingUi, setTapHintUi) {
   let player = null;
   let ready = false;
   let userStarted = false;
-  let gestureReceived = false;
 
-  const label = btn?.querySelector(".invite-music-label");
-
-  // Until the YouTube player is ready, prevent the UI from looking "ready".
-  // (It will be removed in onReady.)
+  setLoadingUi();
   btn?.classList.add("is-unavailable");
 
-  const play = () => {
+  const playInGesture = () => {
     if (!player || !ready) return false;
     try {
-      player.unMute();
-      player.setVolume(config.musicVolume ?? 60);
+      // iOS requires playVideo() inside the tap handler. Start muted, then unmute.
+      player.mute();
       player.playVideo();
+      player.setVolume(config.musicVolume ?? 60);
+      player.unMute();
       userStarted = true;
       setPlayingUi(true);
       return true;
@@ -855,17 +898,18 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
       userStarted = false;
       pause();
     } else {
-      play();
+      playInGesture();
     }
   };
 
   const createPlayer = () => {
     player = new YT.Player("youtubeMusicPlayer", {
-      height: "0",
-      width: "0",
+      height: "1",
+      width: "1",
       videoId,
       playerVars: {
         autoplay: 0,
+        mute: 1,
         loop: 1,
         playlist: videoId,
         controls: 0,
@@ -879,67 +923,48 @@ function initYouTubeBackgroundMusic(videoId, btn, setPlayingUi) {
       events: {
         onReady: () => {
           ready = true;
-          btn?.classList.remove("is-unavailable");
+          btn?.classList.remove("is-unavailable", "is-loading");
+          setTapHintUi();
 
-          // Try autoplay after the player becomes ready; if the browser blocks,
-          // the user can tap the button (or anywhere) to enable sound.
-          if (config.musicAutoplay !== false) {
-            if (!attemptPlay()) {
-              if (label) label.textContent = "Tap to allow sound";
-            }
-          } else if (gestureReceived) {
-            attemptPlay();
+          if (config.musicAutoplay !== false && !isCoarsePointerDevice()) {
+            playInGesture();
           }
         },
         onStateChange: (event) => {
           if (event.data === YT.PlayerState.PLAYING) setPlayingUi(true);
           if (event.data === YT.PlayerState.PAUSED) setPlayingUi(false);
+        },
+        onError: () => {
+          btn?.classList.add("is-unavailable");
+          btn?.classList.remove("is-loading");
+          if (label) label.textContent = "Music unavailable";
         }
       }
     });
   };
 
-  const attemptPlay = () => {
-    if (userStarted) return true;
-    const ok = play();
-    if (!ok && label) label.textContent = "Tap to allow sound";
-    return ok;
-  };
-
-  if (window.YT?.Player) {
-    createPlayer();
-  } else {
-    window.onYouTubeIframeAPIReady = createPlayer;
-    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.head.append(tag);
+  bindMusicButton(btn, () => {
+    if (!ready) {
+      setLoadingUi();
+      return;
     }
-  }
-
-  btn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (!ready) return;
-    gestureReceived = true;
     if (!userStarted) {
-      attemptPlay();
+      if (!playInGesture() && label) {
+        label.textContent = (window.__i18n || config.i18n.en).tapToPlayMusic || "Tap to play music";
+      }
       return;
     }
     toggle();
   });
 
-  const startOnGesture = () => {
-    gestureReceived = true;
-    attemptPlay();
-  };
-
-  // Don't use { once: true }: on mobile the first tap can happen before the
-  // YouTube player becomes ready, and the previous implementation never retried.
-  document.addEventListener("click", startOnGesture, { passive: true });
-  document.addEventListener("touchstart", startOnGesture, { passive: true });
+  if (window.YT?.Player) {
+    createPlayer();
+  } else {
+    window.onYouTubeIframeAPIReady = createPlayer;
+  }
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && userStarted && ready) play();
+    if (document.visibilityState === "visible" && userStarted && ready) playInGesture();
   });
 }
 
