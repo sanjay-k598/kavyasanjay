@@ -32,12 +32,28 @@ function eventLunch(event, dict = getDict()) {
   return dict[eventDictKey(event, "lunch")] || event.lunch || "";
 }
 
-function fmtEventDate(iso, lang = currentLang) {
-  const d = new Date(iso);
+function eventDateOnly(iso) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(iso).trim());
+}
+
+function parseEventDate(iso) {
+  if (eventDateOnly(iso)) return new Date(`${iso}T12:00:00`);
+  return new Date(iso);
+}
+
+function fmtEventDate(iso, lang = currentLang, hideTime = false) {
+  const d = parseEventDate(iso);
   const locale = getLocale(lang);
   if (Number.isNaN(d.getTime())) return { weekday: "", dateTime: "" };
+  const weekday = d.toLocaleDateString(locale, { weekday: "long" });
+  if (hideTime || eventDateOnly(iso)) {
+    return {
+      weekday,
+      dateTime: d.toLocaleDateString(locale, { month: "long", day: "numeric", year: "numeric" })
+    };
+  }
   return {
-    weekday: d.toLocaleDateString(locale, { weekday: "long" }),
+    weekday,
     dateTime: d.toLocaleString(locale, {
       month: "long",
       day: "numeric",
@@ -60,16 +76,33 @@ function eventCalendarAddress(event, dict = getDict()) {
 }
 
 function createGoogleCalendarUrl(event, dict = getDict()) {
-  const start = new Date(event.datetime);
-  const end = event.endDatetime
-    ? new Date(event.endDatetime)
-    : new Date(start.getTime() + 2 * 60 * 60 * 1000);
-  const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const text = encodeURIComponent(`${eventName(event, dict)} - ${config.brideName} & ${config.groomName}`);
-  const dates = `${fmt(start)}/${fmt(end)}`;
   const details = encodeURIComponent(dict.calendarDetails || "Wedding celebration");
   const location = encodeURIComponent(eventCalendarAddress(event, dict));
+
+  if (event.hideTime || eventDateOnly(event.datetime)) {
+    const day = String(event.datetime).slice(0, 10).replace(/-/g, "");
+    const nextDay = new Date(parseEventDate(event.datetime).getTime() + 86400000)
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, "");
+    const dates = `${day}/${nextDay}`;
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+  }
+
+  const start = parseEventDate(event.datetime);
+  const end = event.endDatetime
+    ? parseEventDate(event.endDatetime)
+    : new Date(start.getTime() + 2 * 60 * 60 * 1000);
+  const fmt = (d) => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const dates = `${fmt(start)}/${fmt(end)}`;
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates}&details=${details}&location=${location}`;
+}
+
+function toIcsDate(iso) {
+  const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return "";
+  return `${m[1]}${m[2]}${m[3]}`;
 }
 
 function toIcsLocal(iso) {
@@ -84,7 +117,11 @@ function icsEscape(value) {
 
 function eventEndIso(event) {
   if (event.endDatetime) return event.endDatetime;
-  const start = new Date(event.datetime);
+  if (event.hideTime || eventDateOnly(event.datetime)) {
+    const d = parseEventDate(event.datetime);
+    return new Date(d.getTime() + 86400000).toISOString().slice(0, 10);
+  }
+  const start = parseEventDate(event.datetime);
   return new Date(start.getTime() + 2 * 60 * 60 * 1000).toISOString();
 }
 
@@ -100,12 +137,17 @@ function buildAllEventsICS(dict = getDict()) {
 
   config.events.forEach((event, index) => {
     const uid = `${event.id || index}@kavyasanjay.com`;
+    const allDay = event.hideTime || eventDateOnly(event.datetime);
+    lines.push("BEGIN:VEVENT", `UID:${uid}`, `DTSTAMP:${stamp}`);
+    if (allDay) {
+      lines.push(
+        `DTSTART;VALUE=DATE:${toIcsDate(event.datetime)}`,
+        `DTEND;VALUE=DATE:${toIcsDate(eventEndIso(event))}`
+      );
+    } else {
+      lines.push(`DTSTART:${toIcsLocal(event.datetime)}`, `DTEND:${toIcsLocal(eventEndIso(event))}`);
+    }
     lines.push(
-      "BEGIN:VEVENT",
-      `UID:${uid}`,
-      `DTSTAMP:${stamp}`,
-      `DTSTART:${toIcsLocal(event.datetime)}`,
-      `DTEND:${toIcsLocal(eventEndIso(event))}`,
       `SUMMARY:${icsEscape(`${eventName(event, dict)} - ${config.brideName} & ${config.groomName}`)}`,
       `LOCATION:${icsEscape(eventCalendarAddress(event, dict))}`,
       `DESCRIPTION:${icsEscape(dict.calendarDetails || "Wedding celebration")}`,
@@ -169,7 +211,7 @@ function renderEvents() {
   config.events.forEach((event) => {
     const card = document.createElement("article");
     card.className = "card";
-    const { weekday, dateTime } = fmtEventDate(event.datetime);
+    const { weekday, dateTime } = fmtEventDate(event.datetime, currentLang, event.hideTime);
     const muhurtham = eventMuhurtham(event, dict);
     const lunch = eventLunch(event, dict);
     const muhurthamHtml = muhurtham ? ` <span class="event-muhurtham">· ${muhurtham}</span>` : "";
