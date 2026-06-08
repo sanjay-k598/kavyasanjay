@@ -787,13 +787,41 @@ function initInviteSection() {
 }
 
 function enableMusicOnFirstInteraction(action) {
+  if (window.__musicGestureBound) return;
+  window.__musicGestureBound = true;
+
   const resume = () => {
+    const ok = action();
+    if (ok === false) return;
     document.removeEventListener("pointerdown", resume);
     document.removeEventListener("touchstart", resume);
-    action();
+    document.removeEventListener("keydown", resume);
   };
+
   document.addEventListener("pointerdown", resume, { passive: true });
   document.addEventListener("touchstart", resume, { passive: true });
+  document.addEventListener("keydown", resume, { passive: true });
+}
+
+function loadYouTubeIframeApi() {
+  return new Promise((resolve) => {
+    if (window.YT?.Player) {
+      resolve();
+      return;
+    }
+
+    const previous = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof previous === "function") previous();
+      resolve();
+    };
+
+    if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.append(tag);
+    }
+  });
 }
 
 function initBackgroundMusic() {
@@ -823,12 +851,16 @@ function initMp3Autoplay(mp3) {
   if (source) source.src = mp3;
   audio.loop = config.musicLoop !== false;
   audio.volume = (config.musicVolume ?? 60) / 100;
+  audio.preload = "auto";
 
   const start = async () => {
     try {
       await audio.play();
     } catch {
-      enableMusicOnFirstInteraction(() => audio.play().catch(() => {}));
+      enableMusicOnFirstInteraction(() => {
+        audio.play().catch(() => {});
+        return true;
+      });
     }
   };
 
@@ -839,30 +871,42 @@ function initMp3Autoplay(mp3) {
 
 function initYouTubeAutoplay(videoId) {
   let player = null;
-  let started = false;
+  let isPlaying = false;
 
-  const start = () => {
-    if (!player || started) return;
+  const resumeFromGesture = () => {
+    if (!player) return false;
     try {
       player.setVolume(config.musicVolume ?? 60);
       player.unMute();
       player.playVideo();
-      started = true;
+      isPlaying = true;
+      return true;
     } catch {
-      enableMusicOnFirstInteraction(() => {
-        try {
-          player?.setVolume(config.musicVolume ?? 60);
-          player?.unMute();
-          player?.playVideo();
-          started = true;
-        } catch {
-          /* ignored */
-        }
-      });
+      return false;
     }
   };
 
-  const createPlayer = () => {
+  const playMuted = () => {
+    if (!player) return;
+    try {
+      player.mute();
+      player.playVideo();
+    } catch {
+      /* ignored */
+    }
+  };
+
+  const tryAudible = () => {
+    if (!player || !isPlaying) return;
+    try {
+      player.setVolume(config.musicVolume ?? 60);
+      player.unMute();
+    } catch {
+      /* ignored */
+    }
+  };
+
+  loadYouTubeIframeApi().then(() => {
     player = new YT.Player("youtubeMusicPlayer", {
       height: "1",
       width: "1",
@@ -878,26 +922,37 @@ function initYouTubeAutoplay(videoId) {
         modestbranding: 1,
         playsinline: 1,
         rel: 0,
+        enablejsapi: 1,
         origin: window.location.origin
       },
       events: {
-        onReady: start,
-        onStateChange: (event) => {
-          if (event.data === YT.PlayerState.PLAYING && !started) started = true;
+        onReady: () => {
+          playMuted();
+          enableMusicOnFirstInteraction(resumeFromGesture);
+          window.setTimeout(() => {
+            if (!isPlaying) return;
+            tryAudible();
+          }, 800);
         },
-        onError: () => {}
+        onStateChange: (event) => {
+          if (event.data === YT.PlayerState.PLAYING) {
+            isPlaying = true;
+            tryAudible();
+          }
+        },
+        onError: () => {
+          enableMusicOnFirstInteraction(resumeFromGesture);
+        }
       }
     });
-  };
+  });
 
-  if (window.YT?.Player) {
-    createPlayer();
-  } else {
-    window.onYouTubeIframeAPIReady = createPlayer;
-  }
+  enableMusicOnFirstInteraction(resumeFromGesture);
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible" && started) start();
+    if (document.visibilityState === "visible" && player && isPlaying) {
+      resumeFromGesture();
+    }
   });
 }
 
