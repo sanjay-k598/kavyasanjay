@@ -947,8 +947,6 @@ function initYouTubeAutoplay(videoId) {
     });
   });
 
-  enableMusicOnFirstInteraction(resumeFromGesture);
-
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible" && player && isPlaying) {
       resumeFromGesture();
