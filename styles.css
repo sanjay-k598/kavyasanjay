@@ -507,6 +507,16 @@ a {
   color: var(--text);
 }
 
+html[lang="te"] .couple-photo-caption h1,
+html[lang="te"] .rsvp-form-header h3 {
+  font-family: "Noto Serif Telugu", Georgia, serif;
+}
+
+html[lang="kn"] .couple-photo-caption h1,
+html[lang="kn"] .rsvp-form-header h3 {
+  font-family: "Noto Serif Kannada", Georgia, serif;
+}
+
 .couple-photo-caption h1 .amp {
   display: block;
   font-size: 0.55em;

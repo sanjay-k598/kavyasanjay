@@ -170,6 +170,41 @@ function downloadAllEventsCalendar() {
   URL.revokeObjectURL(url);
 }
 
+function getCoupleNames(lang = currentLang) {
+  const dict = getDict(lang);
+  return {
+    bride: dict.brideName || config.brideName,
+    groom: dict.groomName || config.groomName
+  };
+}
+
+function coupleNamesHtml(lang = currentLang) {
+  const { bride, groom } = getCoupleNames(lang);
+  return `${bride}<span class="amp">&</span>${groom}`;
+}
+
+function getInitialLanguage() {
+  const options = config.languageOptions || ["en"];
+  const fromUrl = new URLSearchParams(location.search).get("lang")?.toLowerCase();
+  if (fromUrl && options.includes(fromUrl)) return fromUrl;
+  return "en";
+}
+
+function syncLanguageToUrl(lang) {
+  const url = new URL(location.href);
+  if (lang === "en") url.searchParams.delete("lang");
+  else url.searchParams.set("lang", lang);
+  history.replaceState(null, "", url);
+}
+
+function updateCoupleNames() {
+  const { bride, groom } = getCoupleNames();
+  const namesEl = qs("#coupleNames");
+  if (namesEl) namesEl.innerHTML = coupleNamesHtml();
+  const brand = qs("#brandMark");
+  if (brand) brand.textContent = `${bride[0]} & ${groom[0]}`;
+}
+
 function formatTelLink(phone) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 10) return `+1${digits}`;
@@ -193,9 +228,7 @@ function renderInviteAndCouple() {
     });
   }
   qs("#couplePhotoImage").src = config.couplePhoto;
-
-  qs("#coupleNames").innerHTML = `${config.brideName}<span class="amp">&</span>${config.groomName}`;
-  qs("#brandMark").textContent = `${config.brideName[0]} & ${config.groomName[0]}`;
+  updateCoupleNames();
 
   const dateEl = qs("#heroDate");
   if (dateEl) {
@@ -326,7 +359,7 @@ function renderRsvpFormHeader() {
   const namesEl = qs("#rsvpCoupleNames");
   if (!namesEl) return;
 
-  namesEl.innerHTML = `${config.brideName}<span class="amp">&</span>${config.groomName}`;
+  namesEl.innerHTML = coupleNamesHtml();
 }
 
 function renderRSVP() {
@@ -408,8 +441,10 @@ function updateGuestGreeting() {
 
 function updateLocalizedChrome() {
   const dict = getDict();
+  updateCoupleNames();
   qs("#weddingHashtag").textContent = dict.weddingDateDisplay || config.weddingDateDisplay || "";
-  qs("#footerText").innerHTML = `${config.brideName} & ${config.groomName} · ${dict.footerWithLove} <span class="footer-love" aria-hidden="true">♥</span>`;
+  const { bride, groom } = getCoupleNames();
+  qs("#footerText").innerHTML = `${bride} & ${groom} · ${dict.footerWithLove} <span class="footer-love" aria-hidden="true">♥</span>`;
   updateGuestGreeting();
 }
 
@@ -454,6 +489,8 @@ function initLanguage() {
     const dict = getDict(lang);
     window.__i18n = dict;
     window.__lang = lang;
+    sel.value = lang;
+    syncLanguageToUrl(lang);
     applyI18nAttributes(dict);
     document.documentElement.lang = lang;
     document.body.style.fontFamily =
@@ -467,7 +504,7 @@ function initLanguage() {
     applySeoMeta();
   };
   sel.addEventListener("change", () => apply(sel.value));
-  apply("en");
+  apply(getInitialLanguage());
 }
 
 function initTheme() {
