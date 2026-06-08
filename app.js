@@ -280,6 +280,26 @@ function toGoogleFormEmbedUrl(url) {
   return trimmed;
 }
 
+function renderRsvpFormHeader() {
+  const namesEl = qs("#rsvpCoupleNames");
+  const detailsEl = qs("#rsvpFormDetails");
+  if (!namesEl || !detailsEl) return;
+
+  const dict = getDict();
+  namesEl.innerHTML = `${config.brideName}<span class="amp">&</span>${config.groomName}`;
+  const venue = config.venue;
+  const contact = config.contact?.[0];
+  detailsEl.innerHTML = [
+    venue?.name && venue?.address
+      ? `<strong>${venue.name}</strong>, ${venue.address}`
+      : "",
+    dict.weddingDateDisplay || config.weddingDateDisplay || "",
+    contact?.phone ? `Questions? ${contact.title || "Call"} ${contact.phone}` : ""
+  ]
+    .filter(Boolean)
+    .join("<br>");
+}
+
 function renderRSVP() {
   const embedUrl = toGoogleFormEmbedUrl(config.googleFormEmbedUrl || config.googleFormViewUrl);
   const container = qs("#googleFormContainer");
@@ -289,6 +309,7 @@ function renderRSVP() {
   const dict = window.__i18n || config.i18n.en;
 
   if (embedUrl) {
+    renderRsvpFormHeader();
     iframe.src = embedUrl;
     container.classList.remove("hidden");
     qs("#rsvpFormNote")?.classList.remove("hidden");
@@ -370,6 +391,7 @@ function refreshLocalizedContent() {
   renderTravel();
   renderContact();
   renderLivestream();
+  renderRsvpFormHeader();
   updateRsvpDeadline();
   updateAddAllCalendarButton();
   window.__countdownTick?.();

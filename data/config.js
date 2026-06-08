@@ -78,7 +78,7 @@ window.WEDDING_CONFIG = {
   ],
   arrival: {
     title: "Arrival",
-    text: "Fly into Detroit Metropolitan Wayne County Airport (DTW) — the nearest major airport for Troy & Farmington Hills.",
+    text: "Fly into Detroit Metropolitan Wayne County Airport (DTW), the nearest major airport for Troy and Farmington Hills.",
     link: "https://www.metroairport.com/"
   },
   hotelBooking: {
@@ -116,7 +116,7 @@ window.WEDDING_CONFIG = {
       guestCount: "Guest Count",
       submitRsvp: "Submit RSVP",
       openRsvpForm: "Open RSVP in new tab",
-      rsvpFormNote: "Submit below — your response is saved to our guest list.",
+      rsvpFormNote: "Submit below. Your response is saved to our guest list.",
       travelKicker: "For Guests",
       travelStay: "Travel & Stay",
       bookNow: "Book Now",
@@ -142,17 +142,17 @@ window.WEDDING_CONFIG = {
       countdownHours: "Hours",
       countdownMins: "Mins",
       countdownFallback: "July 2, 2026",
-      countdownWeddingDay: "It's wedding day — July 2!",
-      footerWithLove: "With love ♥️",
+      countdownWeddingDay: "It's wedding day, July 2!",
+      footerWithLove: "With love",
       guestGreeting: "Dear {guest} family, we can't wait to celebrate with you.",
-      creatingMoment: "Creating your moment…",
+      creatingMoment: "Creating your moment...",
       weddingDateDisplay: "Thursday 2 July, 2026",
       venueName: "Bharatiya Temple",
       venueHall: "Old Prayer Hall",
       venueParking: "On-site parking at the temple.",
       arrivalTitle: "Arrival",
       arrivalText:
-        "Fly into Detroit Metropolitan Wayne County Airport (DTW) — the nearest major airport for Troy & Farmington Hills.",
+        "Fly into Detroit Metropolitan Wayne County Airport (DTW), the nearest major airport for Troy and Farmington Hills.",
       calendarDetails: "Wedding celebration",
       event_engagement: "Engagement Ceremony",
       event_mehendi: "Mehendi Evening",
@@ -162,7 +162,7 @@ window.WEDDING_CONFIG = {
       event_wedding_muhurtham: "Muhurtham 10 AM EST",
       event_wedding_lunch: "Lunch: 12:30 PM",
       event_wedding_location:
-        "Bharatiya Temple, Old Prayer Hall, Troy (9:00 AM – 2:00 PM)"
+        "Bharatiya Temple, Old Prayer Hall, Troy (9:00 AM - 2:00 PM)"
     },
     te: {
       navInvite: "ఆహ్వానం",

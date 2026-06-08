@@ -32,7 +32,7 @@
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Serif+Kannada:wght@400;600&family=Noto+Serif+Telugu:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=13" />
+    <link rel="stylesheet" href="styles.css?v=14" />
   </head>
   <body>
     <audio id="bgMusic" preload="none" hidden>
@@ -156,12 +156,18 @@
           <p id="rsvpDeadline" class="rsvp-deadline"></p>
           <p id="rsvpFormNote" class="rsvp-form-note hidden" data-i18n="rsvpFormNote"></p>
           <div id="googleFormContainer" class="google-form-container card hidden">
-            <iframe
-              id="googleFormEmbed"
-              title="RSVP form"
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade"
-            ></iframe>
+            <div id="rsvpFormHeader" class="rsvp-form-header">
+              <h3 id="rsvpCoupleNames"></h3>
+              <p id="rsvpFormDetails"></p>
+            </div>
+            <div class="google-form-embed-wrap">
+              <iframe
+                id="googleFormEmbed"
+                title="RSVP form"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+              ></iframe>
+            </div>
           </div>
           <p id="rsvpSetupNote" class="rsvp-setup-note hidden"></p>
           <a
@@ -198,7 +204,7 @@
     </main>
 
     <footer class="site-footer">
-      <p id="footerText">Kavya & Sanjay · With love ♥️</p>
+      <p id="footerText">Kavya & Sanjay · With love</p>
     </footer>
 
     <nav class="mobile-bar" aria-label="Quick actions">
@@ -213,7 +219,7 @@
       <img id="lightboxImage" alt="Gallery preview" />
     </dialog>
 
-    <script src="data/config.js?v=25"></script>
-    <script src="app.js?v=25"></script>
+    <script src="data/config.js?v=26"></script>
+    <script src="app.js?v=26"></script>
   </body>
 </html>

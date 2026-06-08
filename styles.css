@@ -736,9 +736,10 @@ a {
 
 .rsvp-deadline {
   text-align: center;
-  font-family: "Cinzel", Georgia, serif;
-  font-size: 0.88rem;
-  letter-spacing: 0.04em;
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: normal;
   color: var(--primary);
   margin: 0 0 0.85rem;
 }
@@ -844,11 +845,48 @@ a {
 .google-form-container {
   padding: 0;
   overflow: hidden;
+  width: 100%;
+}
+
+.rsvp-form-header {
+  padding: 1.35rem 1.25rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.rsvp-form-header h3 {
+  margin: 0 0 0.65rem;
+  font-size: clamp(1.45rem, 6vw, 1.9rem);
+  line-height: 1.15;
+  color: var(--text);
+}
+
+.rsvp-form-header h3 .amp {
+  display: block;
+  font-size: 0.55em;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--primary);
+  margin: 0.12em 0;
+}
+
+.rsvp-form-header p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.google-form-embed-wrap {
+  overflow: hidden;
+  height: 520px;
 }
 
 .google-form-container iframe {
   width: 100%;
-  min-height: 520px;
+  height: calc(520px + var(--form-clip, 172px));
+  margin-top: calc(-1 * var(--form-clip, 172px));
   border: 0;
   display: block;
   background: var(--surface);

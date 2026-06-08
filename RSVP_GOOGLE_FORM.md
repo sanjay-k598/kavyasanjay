@@ -6,7 +6,7 @@ Guest RSVPs on your website are saved in **Google Forms → Google Sheets**, tie
 
 1. Sign in to **[Google Forms](https://forms.google.com)** with your **personal Gmail**.
 2. Click **Blank form**.
-3. Title: `Kavya & Sanjay Wedding RSVP`
+3. Title: `Guest RSVP` (keep it short — the website shows **Kavya & Sanjay** in the wedding font above the form)
 4. Add these questions (match your site):
 
    | Question type   | Title        | Required |
@@ -58,6 +58,14 @@ Google’s built-in “Get email notifications” only goes to one account. To *
 5. Save, commit, and push to GitHub Pages. Hard-refresh the site.
 
 **Tip:** If you only have the normal link (without `embedded=true`), paste it in `googleFormViewUrl` — the site adds `embedded=true` automatically.
+
+### Google Form title font (optional)
+
+The embedded form cannot use the website's Cinzel font from code. To avoid duplicate names and a mismatched look:
+
+1. In Google Forms, change the form **title** to `Guest RSVP` (not "Sanjay & Kavya").
+2. Shorten the form **description** to one line, or leave it blank — venue and date already appear above the form on the site.
+3. Optional: click the **palette** (Customize theme) → **Font style** → pick a serif option such as **Playfair Display** for when guests open the form in a new tab.
 
 ## 4. Manage RSVPs
 
