@@ -679,14 +679,26 @@ function initInviteSection() {
     Boolean(config.introVideoUrl?.trim());
 
   if (useVideo) {
+    templateWrap?.removeAttribute("hidden");
     cardWrap?.setAttribute("hidden", "");
     initIntroTemplateVideo();
     return;
   }
 
-  templateWrap?.setAttribute("hidden", "");
+  // Show the music button overlay even when the invite hero is image-only.
+  // We hide only the template video, and keep the template wrapper visible
+  // so the user can see the music UI on mobile.
+  templateWrap?.removeAttribute("hidden");
   cardWrap?.removeAttribute("hidden");
   inviteSection?.classList.add("invite-section--image-only");
+
+  const templateVideo = qs("#introTemplateVideo");
+  if (templateVideo) {
+    templateVideo.setAttribute("hidden", "");
+    // Ensure we don't accidentally load/play the video in this mode.
+    templateVideo.removeAttribute("src");
+    templateVideo.load?.();
+  }
 }
 
 function initBackgroundMusic() {
