@@ -56,6 +56,11 @@ window.WEDDING_CONFIG = {
   },
   events: [
     {
+      id: "engagement",
+      datetime: "2026-06-29T19:00:00-04:00",
+      atResidence: true
+    },
+    {
       id: "mehendi",
       datetime: "2026-06-30T19:00:00-04:00",
       atResidence: true
