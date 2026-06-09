@@ -888,16 +888,27 @@ html[lang="kn"] .rsvp-form-header h3 {
 
 .google-form-embed-wrap {
   overflow: hidden;
-  height: 520px;
+  height: 580px;
 }
 
 .google-form-container iframe {
   width: 100%;
-  height: calc(520px + var(--form-clip, 172px));
-  margin-top: calc(-1 * var(--form-clip, 172px));
+  height: calc(580px + var(--form-clip, 360px));
+  margin-top: calc(-1 * var(--form-clip, 360px));
   border: 0;
   display: block;
   background: var(--surface);
+}
+
+@media (max-width: 767px) {
+  .google-form-embed-wrap {
+    height: 620px;
+  }
+
+  .google-form-container iframe {
+    height: calc(620px + var(--form-clip, 420px));
+    margin-top: calc(-1 * var(--form-clip, 420px));
+  }
 }
 
 .google-form-open {

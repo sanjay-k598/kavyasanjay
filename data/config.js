@@ -19,6 +19,8 @@ window.WEDDING_CONFIG = {
   googleFormEmbedUrl:
     "https://docs.google.com/forms/d/e/1FAIpQLScS6FR1id3ilLCJCSIA1_5G8HbE-pm_nY7JSj67JPQ9idWajA/viewform?embedded=true",
   googleFormViewUrl: "https://forms.gle/ABXme3F6Bnvsk6Cu7",
+  /** Pixels to hide duplicate Google Form header above the first question */
+  googleFormClipPx: 420,
   languageOptions: ["en", "te", "kn"],
   whatsappNumber: "13134235855",
   /** Add YouTube / Zoom link on wedding day; leave empty to show “coming soon” */

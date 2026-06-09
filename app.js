@@ -372,6 +372,8 @@ function renderRSVP() {
 
   if (embedUrl) {
     renderRsvpFormHeader();
+    const clipPx = config.googleFormClipPx ?? 360;
+    container.style.setProperty("--form-clip", `${clipPx}px`);
     iframe.src = embedUrl;
     container.classList.remove("hidden");
     qs("#rsvpFormNote")?.classList.remove("hidden");

@@ -86,3 +86,4 @@ The embedded form cannot use the website's Cinzel font from code. To avoid dupli
 - **Form not showing:** Check `googleFormEmbedUrl` in `config.js` is not empty and includes `viewform`.
 - **Iframe blank:** Form must be set to accept responses (not closed). Check form settings.
 - **Wrong account:** Create the form while logged into the Gmail where you want responses stored.
+- **"Untitled Title" showing in the form:** Open your form in [Google Forms](https://forms.google.com), click the **Untitled Title** section header, then either rename it (e.g. `Your details`) or click the **trash icon** on the right to delete the empty section. Save the form and refresh the website. You can also tweak `googleFormClipPx` in `data/config.js` if a sliver of the Google header still shows on mobile.
