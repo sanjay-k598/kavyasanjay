@@ -78,11 +78,6 @@ window.WEDDING_CONFIG = {
       id: "wedding",
       datetime: "2026-07-02T09:00:00-04:00",
       endDatetime: "2026-07-02T14:00:00-04:00"
-    },
-    {
-      id: "satyanarayana",
-      datetime: "2026-07-03T11:00:00-04:00",
-      atResidence: true
     }
   ],
   arrival: {
