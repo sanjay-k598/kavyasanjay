@@ -123,7 +123,7 @@ window.WEDDING_CONFIG = {
       contactHelp: "Contact",
       addToCalendar: "Add to Calendar",
       addAllToCalendar: "Add all events to calendar",
-      rsvpDeadlineNote: "Please RSVP by June 20, 2026",
+      rsvpDeadlineNote: "Please RSVP by June 20, 2026 🤗",
       callNow: "Call",
       tapToCall: "Tap to call on mobile",
       livestreamKicker: "Wedding Day",
