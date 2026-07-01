@@ -24,7 +24,7 @@ window.WEDDING_CONFIG = {
   languageOptions: ["en", "te", "kn"],
   whatsappNumber: "13134235855",
   /** Add YouTube / Zoom link on wedding day; leave empty to show “coming soon” */
-  livestreamUrl: "",
+  livestreamUrl: "https://www.youtube.com/live/cx1e-0-F0G4",
   emergencyNumber: "+91 90000 90000",
   /** YouTube background music: https://www.youtube.com/watch?v=lBVRsXXDJA0 */
   /** For reliable mobile playback, add assets/music/invite.mp3 and set musicUrl below. */
