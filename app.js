@@ -296,12 +296,15 @@ function renderContact() {
 function renderLivestream() {
   const card = qs("#livestreamCard");
   if (!card) return;
+  const section = qs("#livestream");
   const dict = getDict();
   const url = config.livestreamUrl?.trim();
   if (url) {
+    section?.classList.remove("hidden");
     card.innerHTML = `<a class="btn btn-primary" href="${url}" target="_blank" rel="noreferrer">${dict.watchLive}</a>`;
     return;
   }
+  section?.classList.add("hidden");
   card.innerHTML = `<p>${dict.livestreamNote}</p>`;
 }
 
